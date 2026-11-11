@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Experiment Matrix & Latency Sweeps — CPUwiser</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <header class="top-nav">
+    <a href="../index.html" class="brand"><div class="brand-icon">CW</div><span>CPUwiser</span></a>
+    <nav class="nav-links">
+      <a href="../index.html" class="nav-link">Documentation</a>
+      <a href="design.html" class="nav-link">Architecture</a>
+      <a href="experiments.html" class="nav-link active">Experiments</a>
+      <a href="tasks.html" class="nav-link">Milestones</a>
+    </nav>
+  </header>
+
+  <div class="app-layout">
+    <aside class="sidebar">
+      <div class="sidebar-group">
+        <div class="sidebar-title">Getting Started</div>
+        <ul class="sidebar-menu">
+          <li class="sidebar-item"><a href="../index.html"><span>Overview & Problem</span> <span class="badge badge-green">v1.0</span></a></li>
+          <li class="sidebar-item"><a href="research.html"><span>Verdict & Research</span> <span class="badge badge-yellow">Stats</span></a></li>
+        </ul>
+      </div>
+      <div class="sidebar-group">
+        <div class="sidebar-title">Architecture & System</div>
+        <ul class="sidebar-menu">
+          <li class="sidebar-item"><a href="design.html"><span>System Design</span> <span class="badge badge-cyan">Spec</span></a></li>
+          <li class="sidebar-item"><a href="plan.html"><span>Roadmap & Decisions</span></a></li>
+          <li class="sidebar-item"><a href="infra.html"><span>Infrastructure & Cloud</span></a></li>
+        </ul>
+      </div>
+      <div class="sidebar-group">
+        <div class="sidebar-title">Testing & Execution</div>
+        <ul class="sidebar-menu">
+          <li class="sidebar-item active"><a href="experiments.html"><span>Experiment Matrix</span> <span class="badge badge-yellow">Tiers</span></a></li>
+          <li class="sidebar-item"><a href="tasks.html"><span>Task Board</span> <span class="badge badge-green">M0-M7</span></a></li>
+          <li class="sidebar-item"><a href="claude.html"><span>Agent Rules & Guardrails</span> <span class="badge badge-red">Strict</span></a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <main class="main-wrapper">
+      <div class="content-container">
+        <div class="hero-badge">Experimental Protocol</div>
+        <h1 class="hero-title">Experiment Matrix & Latency Sweeps</h1>
+        <p class="hero-subtitle">
+          Every hypothesis is tested with 5 measured runs per configuration, median + p95 latency tracking, warm-up runs, and strict control baselines.
+        </p>
+
+        <h2>Tier A: Laptop Simulation (Docker + tc netem)</h2>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Experiment Name</th>
+                <th>Variable Swept</th>
+                <th>Core Hypothesis to Confirm/Disprove</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>A1</strong></td>
+                <td>Single-Node Baseline</td>
+                <td>Thread count (1 to host logical cores)</td>
+                <td>Finds the peak single-machine tok/s beyond which memory contention slows generation.</td>
+              </tr>
+              <tr>
+                <td><strong>A2</strong></td>
+                <td>RPC Loopback Overhead</td>
+                <td>Coordinator + 1 RPC worker on loopback</td>
+                <td>Measures raw serialization and context serialization tax with 0ms network latency.</td>
+              </tr>
+              <tr>
+                <td><strong>A3</strong></td>
+                <td>Latency Sweep (Core)</td>
+                <td>Injected RTT: 0.1ms, 0.5ms, 1ms, 2ms, 5ms, 10ms, 20ms</td>
+                <td>Charts token-per-second collapse slope against round-trip delays.</td>
+              </tr>
+              <tr>
+                <td><strong>A4</strong></td>
+                <td>Hop Count (Node Count)</td>
+                <td>2, 3, 4 worker nodes with fixed total model</td>
+                <td>Quantifies whether adding nodes improves throughput or degrades into network communication overhead.</td>
+              </tr>
+              <tr>
+                <td><strong>A5</strong></td>
+                <td>Bandwidth Sweep</td>
+                <td>10 Gbps down to 10 Mbps throttled link</td>
+                <td>Determines minimum network throughput needed for weight synchronization vs prompt streaming.</td>
+              </tr>
+              <tr>
+                <td><strong>A6</strong></td>
+                <td>Prompt Length & TTFT</td>
+                <td>Input prompt tokens: 32, 128, 512, 1024, 2048</td>
+                <td>Computes prompt processing (prefill) latency distribution across workers.</td>
+              </tr>
+              <tr>
+                <td><strong>A7</strong></td>
+                <td>Failure Injection</td>
+                <td>Worker killed mid-stream via <code>SIGKILL</code></td>
+                <td>Validates adapter crash-detection, error bubbling, and cluster heartbeat reporting.</td>
+              </tr>
+              <tr>
+                <td><strong>A8</strong></td>
+                <td>Heterogeneity Tuning</td>
+                <td>Unequal split ratios (e.g. 70% to node 1, 30% to node 2)</td>
+                <td>Ensures fast cores do not idle waiting for slow cores during all-reduce steps.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout callout-info">
+          <div>
+            <strong>Reproducibility Mandate:</strong> No performance figure may appear in results or documentation without an exact commit hash, raw terminal log reference, and hardware specification string.
+          </div>
+        </div>
+
+        <div class="doc-footer-nav">
+          <a href="design.html" class="doc-footer-btn">
+            <span class="label">Previous</span>
+            <span class="title">← System Design</span>
+          </a>
+          <a href="tasks.html" class="doc-footer-btn" style="text-align: right;">
+            <span class="label">Next</span>
+            <span class="title">Task Board & Milestones →</span>
+          </a>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script src="assets/js/main.js"></script>
+</body>
+</html>
+

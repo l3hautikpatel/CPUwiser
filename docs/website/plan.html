@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Roadmap & Decisions — CPUwiser</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <header class="top-nav">
+    <a href="../index.html" class="brand"><div class="brand-icon">CW</div><span>CPUwiser</span></a>
+    <nav class="nav-links">
+      <a href="../index.html" class="nav-link">Documentation</a>
+      <a href="design.html" class="nav-link">Architecture</a>
+      <a href="experiments.html" class="nav-link">Experiments</a>
+      <a href="tasks.html" class="nav-link">Milestones</a>
+    </nav>
+  </header>
+
+  <div class="app-layout">
+    <aside class="sidebar">
+      <div class="sidebar-group">
+        <div class="sidebar-title">Getting Started</div>
+        <ul class="sidebar-menu">
+          <li class="sidebar-item"><a href="../index.html"><span>Overview & Problem</span> <span class="badge badge-green">v1.0</span></a></li>
+          <li class="sidebar-item"><a href="research.html"><span>Verdict & Research</span> <span class="badge badge-yellow">Stats</span></a></li>
+        </ul>
+      </div>
+      <div class="sidebar-group">
+        <div class="sidebar-title">Architecture & System</div>
+        <ul class="sidebar-menu">
+          <li class="sidebar-item"><a href="design.html"><span>System Design</span> <span class="badge badge-cyan">Spec</span></a></li>
+          <li class="sidebar-item active"><a href="plan.html"><span>Roadmap & Decisions</span></a></li>
+          <li class="sidebar-item"><a href="infra.html"><span>Infrastructure & Cloud</span></a></li>
+        </ul>
+      </div>
+      <div class="sidebar-group">
+        <div class="sidebar-title">Testing & Execution</div>
+        <ul class="sidebar-menu">
+          <li class="sidebar-item"><a href="experiments.html"><span>Experiment Matrix</span> <span class="badge badge-yellow">Tiers</span></a></li>
+          <li class="sidebar-item"><a href="tasks.html"><span>Task Board</span> <span class="badge badge-green">M0-M7</span></a></li>
+          <li class="sidebar-item"><a href="claude.html"><span>Agent Rules & Guardrails</span> <span class="badge badge-red">Strict</span></a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <main class="main-wrapper">
+      <div class="content-container">
+        <div class="hero-badge">Strategic Roadmap</div>
+        <h1 class="hero-title">Goals, Scope & Key Architectural Decisions</h1>
+        <p class="hero-subtitle">
+          Defining explicit boundaries, technical trade-offs, and criteria for determining whether distributed CPU inference can ever be practical.
+        </p>
+
+        <h2>1. In-Scope vs Out-of-Scope</h2>
+        <div class="card-grid">
+          <div class="glass-card" style="border-left: 3px solid var(--accent-green);">
+            <strong style="color: var(--accent-green);">In Scope (What We Build)</strong>
+            <ul style="margin-top: 0.5rem; font-size: 0.88rem; padding-left: 1.2rem;">
+              <li>Single open-weight LLM split across multiple CPU nodes.</li>
+              <li>Automated profile parser and model placement planner.</li>
+              <li>Systematic latency, bandwidth, and node-count sweeps.</li>
+              <li>Reproducible benchmark output in JSONL / CSV formats.</li>
+            </ul>
+          </div>
+          <div class="glass-card" style="border-left: 3px solid var(--accent-red);">
+            <strong style="color: var(--accent-red);">Out of Scope (Non-Goals)</strong>
+            <ul style="margin-top: 0.5rem; font-size: 0.88rem; padding-left: 1.2rem;">
+              <li>No production web service, SLA, or multi-tenant API.</li>
+              <li>No GPU or CUDA kernel optimization work.</li>
+              <li>No LLM training or fine-tuning pipelines.</li>
+              <li>No Kubernetes, Nomad, or Ray cluster orchestration.</li>
+            </ul>
+          </div>
+        </div>
+
+        <h2>2. Why This is Worth Doing</h2>
+        <p>
+          Even if distributed CPU inference yields modest speeds (e.g. 1-2 tokens/sec), uncovering the exact quantitative tipping points between memory bandwidth saturation and network serialization latency provides invaluable foundational insights into distributed systems engineering.
+        </p>
+
+        <div class="doc-footer-nav">
+          <a href="design.html" class="doc-footer-btn">
+            <span class="label">Previous</span>
+            <span class="title">← System Design</span>
+          </a>
+          <a href="infra.html" class="doc-footer-btn" style="text-align: right;">
+            <span class="label">Next</span>
+            <span class="title">Infrastructure & Cloud →</span>
+          </a>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script src="assets/js/main.js"></script>
+</body>
+</html>
+
