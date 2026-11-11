@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>System Design & Interfaces — CPUwiser</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+  <header class="top-nav">
+    <a href="../index.html" class="brand">
+      <div class="brand-icon">CW</div>
+      <span>CPUwiser</span>
+    </a>
+    <nav class="nav-links">
+      <a href="../index.html" class="nav-link">Documentation</a>
+      <a href="design.html" class="nav-link active">Architecture</a>
+      <a href="experiments.html" class="nav-link">Experiments</a>
+      <a href="tasks.html" class="nav-link">Milestones</a>
+      <a href="https://github.com" target="_blank" class="nav-link" style="opacity: 0.7;">GitHub</a>
+    </nav>
+  </header>
+
+  <div class="app-layout">
+    <aside class="sidebar">
+      <div class="sidebar-group">
+        <div class="sidebar-title">Getting Started</div>
+        <ul class="sidebar-menu">
+          <li class="sidebar-item"><a href="../index.html"><span>Overview & Problem</span> <span class="badge badge-green">v1.0</span></a></li>
+          <li class="sidebar-item"><a href="research.html"><span>Verdict & Research</span> <span class="badge badge-yellow">Stats</span></a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-group">
+        <div class="sidebar-title">Architecture & System</div>
+        <ul class="sidebar-menu">
+          <li class="sidebar-item active"><a href="design.html"><span>System Design</span> <span class="badge badge-cyan">Spec</span></a></li>
+          <li class="sidebar-item"><a href="plan.html"><span>Roadmap & Decisions</span></a></li>
+          <li class="sidebar-item"><a href="infra.html"><span>Infrastructure & Cloud</span></a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-group">
+        <div class="sidebar-title">Testing & Execution</div>
+        <ul class="sidebar-menu">
+          <li class="sidebar-item"><a href="experiments.html"><span>Experiment Matrix</span> <span class="badge badge-yellow">Tiers</span></a></li>
+          <li class="sidebar-item"><a href="tasks.html"><span>Task Board</span> <span class="badge badge-green">M0-M7</span></a></li>
+          <li class="sidebar-item"><a href="claude.html"><span>Agent Rules & Guardrails</span> <span class="badge badge-red">Strict</span></a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <main class="main-wrapper">
+      <div class="content-container">
+        <div class="hero-badge">Architecture Specification</div>
+        <h1 class="hero-title">Components, Schemas & Interfaces</h1>
+        <p class="hero-subtitle">
+          Detailed breakdown of CPUwiser's core Python modules, YAML profile schemas, constraint solver planner logic, and engine adapter lifecycle.
+        </p>
+
+        <h2>1. Design Principles</h2>
+        <ul>
+          <li><strong>Profile in, plan out, results recorded:</strong> Every run is driven by data (profile YAML, plan spec, experiment spec) and produces an immutable, self-contained record.</li>
+          <li><strong>One engine adapter per engine:</strong> All runtime backends conform to a unified interface so experiments run agnostic of whether llama.cpp RPC or distributed-llama is executing.</li>
+          <li><strong>Pure core, thin shell:</strong> Profile loading, planning, and command compilation are pure functions, completely testable without Docker or cloud VMs.</li>
+          <li><strong>Reproducible by construction:</strong> Model hash (SHA-256), git commit of the engine, CPU microarchitecture, and kernel are stamped into every result.</li>
+        </ul>
+
+        <h2>2. Core Modules Breakdown</h2>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Module</th>
+                <th>Responsibility</th>
+                <th>Dependencies</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>cpuwiser.profile</code></td>
+                <td>Loads, validates, and normalizes YAML cluster descriptions into immutable dataclasses.</td>
+                <td>None (stdlib + pydantic/yaml)</td>
+              </tr>
+              <tr>
+                <td><code>cpuwiser.planner</code></td>
+                <td>Solves layer-split allocations, thread binding, context sizes, and warns on memory over-commit.</td>
+                <td><code>profile</code>, model metadata</td>
+              </tr>
+              <tr>
+                <td><code>cpuwiser.engines</code></td>
+                <td>Adapters for starting, supervising, and parsing stdout from coordinator & worker processes.</td>
+                <td><code>profile</code>, <code>planner</code></td>
+              </tr>
+              <tr>
+                <td><code>cpuwiser.runner</code></td>
+                <td>Executes experiment sweeps, configures <code>tc netem</code>, captures performance telemetry.</td>
+                <td><code>engines</code>, <code>infra</code></td>
+              </tr>
+              <tr>
+                <td><code>cpuwiser.infra</code></td>
+                <td>Local Docker Compose lifecycle, SSH node bridges, network delay proxies, host resource samplers.</td>
+                <td>None</td>
+              </tr>
+              <tr>
+                <td><code>cpuwiser.report</code></td>
+                <td>Aggregates run logs, fits latency slopes (RTT vs tok/s), outputs markdown tables and charts.</td>
+                <td><code>results/</code> data</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>3. Cluster Profile Schema (YAML)</h2>
+        <p>A cluster profile declaratively represents all nodes participating in an inference cluster:</p>
+
+        <pre><code>cluster:
+  name: "oracle-free-tier"
+  description: "2x Arm A1 (2 OCPU each) + 2x AMD Micro"
+  nodes:
+    - name: "arm-node-01"
+      role: "coordinator"
+      arch: "aarch64"
+      cpu_cores: 2
+      ram_mb: 12288
+      ip: "10.0.0.2"
+      cost_per_hr: 0.00
+    - name: "arm-node-02"
+      role: "worker"
+      arch: "aarch64"
+      cpu_cores: 2
+      ram_mb: 12288
+      ip: "10.0.0.3"
+      cost_per_hr: 0.00
+network:
+  type: "simulated-lan"
+  baseline_rtt_ms: 0.2
+  emulated_delay_ms: 5.0
+  bandwidth_mbps: 1000</code></pre>
+
+        <!-- Interactive Pipeline Split vs Tensor Split Diagram -->
+        <h2>Inference Distribution Strategies</h2>
+        <div class="diagram-container">
+          <div class="diagram-header">
+            <span class="diagram-title">Pipeline Parallelism vs. Tensor Parallelism Over CPU</span>
+            <span class="badge badge-yellow">Architecture</span>
+          </div>
+          <svg viewBox="0 0 880 280" width="100%" height="280">
+            <!-- Pipeline Splitting (Sequential) -->
+            <rect x="20" y="20" width="400" height="230" rx="10" fill="#0d1117" stroke="rgba(56, 189, 248, 0.3)" stroke-width="1.5" />
+            <text x="40" y="50" fill="#38bdf8" font-size="14" font-weight="700">Strategy A: Pipeline Splitting</text>
+            <text x="40" y="70" fill="#94a3b8" font-size="11">Tolerates higher network delay (1-5ms); 1 token passed sequentially</text>
+
+            <rect x="40" y="100" width="95" height="60" rx="6" fill="#1e293b" stroke="#38bdf8" stroke-width="1"/>
+            <text x="87" y="125" fill="#f8fafc" font-size="11" text-anchor="middle">Node 0</text>
+            <text x="87" y="142" fill="#94a3b8" font-size="9" text-anchor="middle">Layers 0..15</text>
+
+            <path d="M 135 130 L 175 130" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow)"/>
+
+            <rect x="180" y="100" width="95" height="60" rx="6" fill="#1e293b" stroke="#38bdf8" stroke-width="1"/>
+            <text x="227" y="125" fill="#f8fafc" font-size="11" text-anchor="middle">Node 1</text>
+            <text x="227" y="142" fill="#94a3b8" font-size="9" text-anchor="middle">Layers 16..31</text>
+
+            <path d="M 275 130 L 315 130" stroke="#38bdf8" stroke-width="2"/>
+
+            <rect x="320" y="100" width="85" height="60" rx="6" fill="#1e293b" stroke="#22c55e" stroke-width="1"/>
+            <text x="362" y="125" fill="#f8fafc" font-size="11" text-anchor="middle">Output</text>
+            <text x="362" y="142" fill="#86efac" font-size="9" text-anchor="middle">Sampled Tok</text>
+
+            <text x="40" y="210" fill="#cbd5e1" font-size="11">Sync Points: 1 per token per hop. Low sensitivity to latency.</text>
+
+            <!-- Tensor Parallelism (Lock-Step) -->
+            <rect x="460" y="20" width="400" height="230" rx="10" fill="#0d1117" stroke="rgba(244, 63, 94, 0.3)" stroke-width="1.5" />
+            <text x="480" y="50" fill="#fb7185" font-size="14" font-weight="700">Strategy B: Tensor Parallelism (RPC)</text>
+            <text x="480" y="70" fill="#94a3b8" font-size="11">Matrix sync every layer; destroyed by network latency &gt; 1ms</text>
+
+            <rect x="480" y="100" width="110" height="50" rx="6" fill="#1e293b" stroke="#fb7185" stroke-width="1"/>
+            <text x="535" y="125" fill="#f8fafc" font-size="11" text-anchor="middle">Worker 1 (Top)</text>
+            <text x="535" y="140" fill="#94a3b8" font-size="9" text-anchor="middle">Half Head Matrix</text>
+
+            <rect x="480" y="165" width="110" height="50" rx="6" fill="#1e293b" stroke="#fb7185" stroke-width="1"/>
+            <text x="535" y="190" fill="#f8fafc" font-size="11" text-anchor="middle">Worker 2 (Bottom)</text>
+            <text x="535" y="205" fill="#94a3b8" font-size="9" text-anchor="middle">Half Head Matrix</text>
+
+            <path d="M 590 125 L 680 145" stroke="#fb7185" stroke-width="1.5"/>
+            <path d="M 590 190 L 680 170" stroke="#fb7185" stroke-width="1.5"/>
+
+            <rect x="680" y="125" width="160" height="65" rx="6" fill="#1e293b" stroke="#fbbf24" stroke-width="1"/>
+            <text x="760" y="150" fill="#fef08a" font-size="11" font-weight="600" text-anchor="middle">All-Reduce Barrier</text>
+            <text x="760" y="168" fill="#cbd5e1" font-size="9" text-anchor="middle">Happens every single layer!</text>
+          </svg>
+        </div>
+
+        <div class="doc-footer-nav">
+          <a href="../index.html" class="doc-footer-btn">
+            <span class="label">Previous</span>
+            <span class="title">← Overview & Problem</span>
+          </a>
+          <a href="experiments.html" class="doc-footer-btn" style="text-align: right;">
+            <span class="label">Next</span>
+            <span class="title">Experiment Matrix →</span>
+          </a>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="assets/js/main.js"></script>
+</body>
+</html>
+
