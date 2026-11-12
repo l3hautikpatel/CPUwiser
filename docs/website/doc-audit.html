@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Documentation Audit & Conflict Resolution — CPUwiser</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <header class="top-nav">
+    <a href="../index.html" class="brand"><div class="brand-icon">CW</div><span>CPUwiser</span></a>
+    <nav class="nav-links">
+      <a href="../index.html" class="nav-link">Documentation</a>
+      <a href="user-guide.html" class="nav-link">CLI & Guide</a>
+      <a href="how-it-works.html" class="nav-link">How It Works</a>
+      <a href="design.html" class="nav-link">Architecture</a>
+      <a href="cloud-setup.html" class="nav-link">Machine Setup</a>
+      <a href="experiments.html" class="nav-link">Experiments</a>
+      <a href="tasks.html" class="nav-link">Milestones</a>
+    </nav>
+  </header>
+
+  <div class="app-layout">
+    <aside class="sidebar">
+            <div class="sidebar-group">
+        <div class="sidebar-title">Getting Started</div>
+        <ul class="sidebar-menu">
+          <li class="sidebar-item"><a href="../index.html"><span>Overview & Problem</span> <span class="badge badge-green">v1.0</span></a></li>
+          <li class="sidebar-item"><a href="user-guide.html"><span>User Guide & CLI</span> <span class="badge badge-green">Guide</span></a></li>
+          <li class="sidebar-item"><a href="how-it-works.html"><span>How It Works & Flow</span> <span class="badge badge-cyan">Core</span></a></li>
+          <li class="sidebar-item"><a href="node-roles.html"><span>Master vs Workers</span> <span class="badge badge-yellow">Roles</span></a></li>
+          <li class="sidebar-item"><a href="doc-audit.html"><span>Doc Audit & Conflicts</span> <span class="badge badge-red">Audit</span></a></li>
+          <li class="sidebar-item"><a href="research.html"><span>Verdict & Research</span> <span class="badge badge-yellow">Stats</span></a></li>
+        </ul>
+      </div>
+      <div class="sidebar-group">
+        <div class="sidebar-title">Machine & Cloud Setup</div>
+        <ul class="sidebar-menu">
+          <li class="sidebar-item"><a href="cloud-setup.html"><span>Machine & Cloud Setup</span> <span class="badge badge-green">Step-by-step</span></a></li>
+          <li class="sidebar-item"><a href="infra.html"><span>Infrastructure & Docker</span></a></li>
+          <li class="sidebar-item"><a href="platforms.html"><span>Pluggable Providers</span> <span class="badge badge-cyan">Oracle/AWS</span></a></li>
+        </ul>
+      </div>
+      <div class="sidebar-group">
+        <div class="sidebar-title">Architecture & System</div>
+        <ul class="sidebar-menu">
+          <li class="sidebar-item"><a href="design.html"><span>System Design</span> <span class="badge badge-cyan">Spec</span></a></li>
+          <li class="sidebar-item"><a href="plan.html"><span>Roadmap & Decisions</span></a></li>
+        </ul>
+      </div>
+      <div class="sidebar-group">
+        <div class="sidebar-title">Testing & Guardrails</div>
+        <ul class="sidebar-menu">
+          <li class="sidebar-item"><a href="experiments.html"><span>Experiment Matrix</span> <span class="badge badge-yellow">Tiers</span></a></li>
+          <li class="sidebar-item"><a href="tasks.html"><span>Task Board</span> <span class="badge badge-green">M0-M7</span></a></li>
+          <li class="sidebar-item"><a href="claude.html"><span>Agent Rules & Guardrails</span> <span class="badge badge-red">Strict</span></a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <main class="main-wrapper">
+      <div class="content-container">
+        <div class="hero-badge">Quality Assurance</div>
+        <h1 class="hero-title">Documentation Audit & Conflict Resolution</h1>
+        <p class="hero-subtitle">
+          Comprehensive review of pack inconsistencies, superseded instructions, and authoritative rulings to eliminate ambiguity for human and agent developers.
+        </p>
+
+        <div class="callout callout-info">
+          <div>
+            <strong>Authoritative Priority Rule:</strong> When two documents disagree, the newer companion document takes precedence over older files. <code>CLI-START-HERE.md</code> and <code>DOC-AUDIT.md</code> represent the ultimate rulings.
+          </div>
+        </div>
+
+        <!-- Discrepancy & Resolution Matrix -->
+        <h2>Identified Conflicts & Final Rulings</h2>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Area of Ambiguity</th>
+                <th>Older Document Stance</th>
+                <th>Authoritative Final Ruling</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Default Model</strong></td>
+                <td>Earlier files suggested SmolLM2-360M or Qwen2.5-0.5B.</td>
+                <td><strong>Qwen3 0.6B</strong> (quick baseline) and <strong>Qwen3 1.7B</strong> (main runs). Only Qwen3 is supported by both llama.cpp and distributed-llama for A9 engine comparison.</td>
+              </tr>
+              <tr>
+                <td><strong>License Selection</strong></td>
+                <td>Earlier files left the license open (MIT, Apache, or AGPL).</td>
+                <td><strong>MIT License</strong>. Permissive, simple for portfolio projects, and aligns with upstream engines.</td>
+              </tr>
+              <tr>
+                <td><strong>Oracle Multi-Account Policy</strong></td>
+                <td>Early exploratory drafts discussed multiple free accounts.</td>
+                <td><strong>Strictly 1 Account</strong>. Creating multiple accounts violates Oracle ToS and risks termination. Use 1 account (2x A1 1 OCPU/6GB) + optional AWS guest node or laptop.</td>
+              </tr>
+              <tr>
+                <td><strong>Terminology: Master vs Coordinator</strong></td>
+                <td>Older files used "coordinator" everywhere.</td>
+                <td><strong>Master</strong> is used in user-facing documentation, CLI output, and UI. In internal Python code, the field name remains <code>coordinator</code>. CLI accepts both.</td>
+              </tr>
+              <tr>
+                <td><strong>Local Simulation Priority</strong></td>
+                <td>Unclear whether cloud or laptop came first.</td>
+                <td><strong>Laptop Docker first (M0 to M3)</strong>. Build and prove all test suites locally before touching cloud VMs. Oracle setup runs in parallel.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>Pre-Development Checklist for Developers</h2>
+        <ol>
+          <li>Read <code>CLI-START-HERE.md</code> and <code>GUARDRAILS.md</code> before writing application code.</li>
+          <li>Ensure Python 3.12 and <code>uv</code> package manager are installed locally.</li>
+          <li>Verify Docker Desktop / Colima is running for the local simulation environment.</li>
+          <li>Never commit any IP addresses, SSH keys, or <code>.env</code> files to git.</li>
+        </ol>
+
+        <div class="doc-footer-nav">
+          <a href="user-guide.html" class="doc-footer-btn">
+            <span class="label">Previous</span>
+            <span class="title">← User Guide & CLI</span>
+          </a>
+          <a href="how-it-works.html" class="doc-footer-btn" style="text-align: right;">
+            <span class="label">Next</span>
+            <span class="title">How It Works & Prompt Flow →</span>
+          </a>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script src="assets/js/main.js"></script>
+</body>
+</html>
