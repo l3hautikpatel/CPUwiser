@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Machine & Cloud Setup Runbook — CPUwiser</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+
+<body>
+  <header class="top-nav">
+    <a href="../index.html" class="brand">
+      <div class="brand-icon">CW</div><span>CPUwiser</span>
+    </a>
+    <nav class="nav-links">
+      <a href="../index.html" class="nav-link">Documentation</a>
+      <a href="how-it-works.html" class="nav-link">How It Works</a>
+      <a href="design.html" class="nav-link">Architecture</a>
+      <a href="cloud-setup.html" class="nav-link active">Machine Setup</a>
+      <a href="experiments.html" class="nav-link">Experiments</a>
+      <a href="tasks.html" class="nav-link">Milestones</a>
+    </nav>
+  </header>
+
+  <div class="app-layout">
+    <aside class="sidebar">
+      <div class="sidebar-group">
+        <div class="sidebar-title">Getting Started</div>
+        <ul class="sidebar-menu">
+          <li class="sidebar-item"><a href="../index.html"><span>Overview & Problem</span> <span
+                class="badge badge-green">v1.0</span></a></li>
+          <li class="sidebar-item"><a href="how-it-works.html"><span>How It Works & Flow</span> <span
+                class="badge badge-cyan">Core</span></a></li>
+          <li class="sidebar-item"><a href="node-roles.html"><span>Master vs Workers</span> <span
+                class="badge badge-yellow">Roles</span></a></li>
+          <li class="sidebar-item"><a href="research.html"><span>Verdict & Research</span> <span
+                class="badge badge-yellow">Stats</span></a></li>
+        </ul>
+      </div>
+      <div class="sidebar-group">
+        <div class="sidebar-title">Machine & Cloud Setup</div>
+        <ul class="sidebar-menu">
+          <li class="sidebar-item active"><a href="cloud-setup.html"><span>Machine & Cloud Setup</span> <span
+                class="badge badge-green">Step-by-step</span></a></li>
+          <li class="sidebar-item"><a href="infra.html"><span>Infrastructure & Docker</span></a></li>
+          <li class="sidebar-item"><a href="platforms.html"><span>Pluggable Providers</span> <span
+                class="badge badge-cyan">Oracle/AWS</span></a></li>
+        </ul>
+      </div>
+      <div class="sidebar-group">
+        <div class="sidebar-title">Architecture & System</div>
+        <ul class="sidebar-menu">
+          <li class="sidebar-item"><a href="design.html"><span>System Design</span> <span
+                class="badge badge-cyan">Spec</span></a></li>
+          <li class="sidebar-item"><a href="plan.html"><span>Roadmap & Decisions</span></a></li>
+        </ul>
+      </div>
+      <div class="sidebar-group">
+        <div class="sidebar-title">Testing & Guardrails</div>
+        <ul class="sidebar-menu">
+          <li class="sidebar-item"><a href="experiments.html"><span>Experiment Matrix</span> <span
+                class="badge badge-yellow">Tiers</span></a></li>
+          <li class="sidebar-item"><a href="tasks.html"><span>Task Board</span> <span
+                class="badge badge-green">M0-M7</span></a></li>
+          <li class="sidebar-item"><a href="claude.html"><span>Agent Rules & Guardrails</span> <span
+                class="badge badge-red">Strict</span></a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <main class="main-wrapper">
+      <div class="content-container">
+        <div class="hero-badge">Step-by-Step Runbook</div>
+        <h1 class="hero-title">How to Set Up Machines (Oracle Cloud & AWS)</h1>
+        <p class="hero-subtitle">
+          Exact console selections, shape parameters, budget guardrails, and automated bootstrap commands for setting up
+          cluster nodes.
+        </p>
+
+        <!-- Golden Cost Warning -->
+        <div class="callout callout-warning">
+          <div>
+            <strong>The Zero-Dollar Cloud Mandate:</strong> Only use one single Oracle account with the <strong>Always
+              Free</strong> tag. Never provision paid shapes or exceed 4 OCPU / 24 GB total. If any prompt or console
+            screen displays an hourly cost, cancel immediately!
+          </div>
+        </div>
+
+        <h2>1. Oracle Cloud Setup: The 2-Node Cluster (S1 Configuration)</h2>
+        <p>This layout gives us a genuine distributed testbed without exceeding the free limits:</p>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Node Name</th>
+                <th>Shape & CPU Architecture</th>
+                <th>OCPU Allocation</th>
+                <th>RAM</th>
+                <th>Boot Volume</th>
+                <th>Role</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>node-1</strong></td>
+                <td><code>VM.Standard.A1.Flex</code> (Ampere Arm)</td>
+                <td>1 OCPU</td>
+                <td>6 GB</td>
+                <td>50 GB (Ubuntu 24.04 aarch64)</td>
+                <td>Master / Coordinator</td>
+              </tr>
+              <tr>
+                <td><strong>node-2</strong></td>
+                <td><code>VM.Standard.A1.Flex</code> (Ampere Arm)</td>
+                <td>1 OCPU</td>
+                <td>6 GB</td>
+                <td>50 GB (Ubuntu 24.04 aarch64)</td>
+                <td>Worker</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Console Step-by-Step Checklist</h3>
+        <ol>
+          <li>Log into Oracle Cloud Console. Confirm the <strong>Always Free Eligible</strong> banner is visible.</li>
+          <li><strong>Virtual Cloud Network (VCN):</strong> Use "Start VCN Wizard" $\rightarrow$ "Create VCN with
+            Internet Connectivity". Name it <code>cpuwiser-vcn</code>.</li>
+          <li><strong>Security Lists:</strong> Ensure internal subnet allows ingress on port <code>22</code> (SSH) and
+            port <code>50052</code> (RPC) between <code>10.0.0.0/16</code>. <em>Do not open 50052 to 0.0.0.0/0!</em>
+          </li>
+          <li><strong>Create Compute Instances:</strong>
+            <ul>
+              <li>Image: Canonical Ubuntu 24.04 Minimal (aarch64).</li>
+              <li>Shape: Ampere $\rightarrow$ <code>VM.Standard.A1.Flex</code> $\rightarrow$ 1 OCPU, 6 GB RAM.</li>
+              <li>SSH Key: Paste your dev laptop public key (<code>~/.ssh/id_ed25519.pub</code>).</li>
+              <li>Boot Volume: Leave at default (50 GB). Total for 2 nodes = 100 GB (well under 200 GB limit).</li>
+            </ul>
+          </li>
+        </ol>
+
+        <!-- AWS Guest Node Section -->
+        <h2>2. AWS Guest Node (S3 Option — Optional 3rd Node)</h2>
+        <p>
+          If you want a 3rd node for multi-cloud latency testing, AWS Free Tier provides time-limited credits ($100
+          credit for new accounts):
+        </p>
+        <div class="card-grid">
+          <div class="glass-card">
+            <span class="badge badge-yellow">AWS Configuration</span>
+            <h3 style="margin-top: 0.5rem;">t4g.small / t4g.micro (Graviton Arm)</h3>
+            <p style="font-size: 0.88rem; color: var(--text-secondary);">
+              Select Ubuntu 24.04 ARM64 AMI, <code>t4g.small</code> (2 vCPU, 2 GB RAM). Join to Oracle master via
+              WireGuard overlay mesh. Set a strict AWS Billing Alert for $1.00!
+            </p>
+          </div>
+        </div>
+
+        <!-- Universal Bootstrap Script -->
+        <h2>3. Universal Node Bootstrap Script (Task T-042)</h2>
+        <p>
+          Once your nodes are reachable via SSH, run the unified bootstrap script to install toolchains and build the
+          pinned engine binaries:
+        </p>
+
+        <pre><code>#!/usr/bin/env bash
+# cpuwiser-bootstrap.sh — Run on every fresh Ubuntu node
+set -euo pipefail
+
+sudo apt-get update && sudo apt-get install -y \
+  build-essential cmake git curl python3-pip wireguard net-tools
+
+# Clone and compile pinned llama.cpp version
+if [ ! -d "/opt/llama.cpp" ]; then
+  sudo git clone https://github.com/ggerganov/llama.cpp /opt/llama.cpp
+  cd /opt/llama.cpp
+  sudo git checkout b3800  # Pinned commit hash
+  sudo cmake -B build -DGGML_RPC=ON
+  sudo cmake --build build --config Release -j$(nproc)
+fi
+
+echo "Node bootstrap complete. Pinned llama.cpp with RPC ready."</code></pre>
+
+        <div class="doc-footer-nav">
+          <a href="node-roles.html" class="doc-footer-btn">
+            <span class="label">Previous</span>
+            <span class="title">← Master vs Worker Roles</span>
+          </a>
+          <a href="platforms.html" class="doc-footer-btn" style="text-align: right;">
+            <span class="label">Next</span>
+            <span class="title">Pluggable Providers & Vercel →</span>
+          </a>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script src="assets/js/main.js"></script>
+</body>
+
+</html>

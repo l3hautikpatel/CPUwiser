@@ -16,7 +16,9 @@
     </a>
     <nav class="nav-links">
       <a href="index.html" class="nav-link active">Documentation</a>
+      <a href="website/how-it-works.html" class="nav-link">How It Works</a>
       <a href="website/design.html" class="nav-link">Architecture</a>
+      <a href="website/cloud-setup.html" class="nav-link">Machine Setup</a>
       <a href="website/experiments.html" class="nav-link">Experiments</a>
       <a href="website/tasks.html" class="nav-link">Milestones</a>
       <a href="https://github.com" target="_blank" class="nav-link" style="opacity: 0.7;">GitHub</a>
@@ -30,7 +32,18 @@
         <div class="sidebar-title">Getting Started</div>
         <ul class="sidebar-menu">
           <li class="sidebar-item active"><a href="index.html"><span>Overview & Problem</span> <span class="badge badge-green">v1.0</span></a></li>
+          <li class="sidebar-item"><a href="website/how-it-works.html"><span>How It Works & Flow</span> <span class="badge badge-cyan">Core</span></a></li>
+          <li class="sidebar-item"><a href="website/node-roles.html"><span>Master vs Workers</span> <span class="badge badge-yellow">Roles</span></a></li>
           <li class="sidebar-item"><a href="website/research.html"><span>Verdict & Research</span> <span class="badge badge-yellow">Stats</span></a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-group">
+        <div class="sidebar-title">Machine & Cloud Setup</div>
+        <ul class="sidebar-menu">
+          <li class="sidebar-item"><a href="website/cloud-setup.html"><span>Machine & Cloud Setup</span> <span class="badge badge-green">Step-by-step</span></a></li>
+          <li class="sidebar-item"><a href="website/infra.html"><span>Infrastructure & Docker</span></a></li>
+          <li class="sidebar-item"><a href="website/platforms.html"><span>Pluggable Providers</span> <span class="badge badge-cyan">Oracle/AWS</span></a></li>
         </ul>
       </div>
 
@@ -39,12 +52,11 @@
         <ul class="sidebar-menu">
           <li class="sidebar-item"><a href="website/design.html"><span>System Design</span> <span class="badge badge-cyan">Spec</span></a></li>
           <li class="sidebar-item"><a href="website/plan.html"><span>Roadmap & Decisions</span></a></li>
-          <li class="sidebar-item"><a href="website/infra.html"><span>Infrastructure & Cloud</span></a></li>
         </ul>
       </div>
 
       <div class="sidebar-group">
-        <div class="sidebar-title">Testing & Execution</div>
+        <div class="sidebar-title">Testing & Guardrails</div>
         <ul class="sidebar-menu">
           <li class="sidebar-item"><a href="website/experiments.html"><span>Experiment Matrix</span> <span class="badge badge-yellow">Tiers</span></a></li>
           <li class="sidebar-item"><a href="website/tasks.html"><span>Task Board</span> <span class="badge badge-green">M0-M7</span></a></li>
@@ -74,10 +86,10 @@
             </p>
           </div>
           <div class="glass-card">
-            <span class="badge badge-yellow">Target Environment</span>
-            <h3 style="margin-top: 0.75rem;">Zero-Cost Cluster</h3>
+            <span class="badge badge-yellow">Pinned Models</span>
+            <h3 style="margin-top: 0.75rem;">Qwen3 Architecture</h3>
             <p style="color: var(--text-secondary); font-size: 0.9rem;">
-              Runs on local Docker desktop setups and zero-dollar Oracle Always Free tier machines (up to 4 OCPU Arm A1 + 2 AMD E2.1.Micro nodes).
+              <strong>Qwen3 0.6B</strong> for fast iterations & <strong>Qwen3 1.7B</strong> for main runs. Supported by both <code>llama.cpp</code> RPC and <code>distributed-llama</code>.
             </p>
           </div>
           <div class="glass-card">
@@ -92,7 +104,7 @@
         <!-- Problem Statement & Solution Section -->
         <h2>Problem Statement & Motivation</h2>
         <p>
-          State-of-the-art open-source LLMs require substantial memory bandwidth and capacity that exceed what a single budget machine or developer laptop can provide. While GPU clusters are prohibitively expensive, developers often possess idle CPU compute across home homelabs, developer laptops, and free-tier cloud instances.
+          State-of-the-art open-source LLMs require substantial memory bandwidth and capacity that exceed what a single budget machine or developer laptop can provide. While GPU clusters are prohibitively expensive, developers often possess idle CPU compute across homelabs, developer laptops, and free-tier cloud instances.
         </p>
 
         <div class="callout callout-warning">
@@ -232,10 +244,6 @@
 
         <!-- Strict Lab Guardrails -->
         <h2>Project Guardrails & Non-Goals</h2>
-        <p>
-          To maintain scientific integrity and operational security, CPUwiser enforces strict boundaries:
-        </p>
-
         <div class="card-grid">
           <div class="glass-card" style="border-left: 3px solid var(--accent-red);">
             <strong style="color: var(--accent-red); font-size: 0.95rem;">No Public RPC Exposure</strong>
@@ -260,9 +268,9 @@
         <!-- Book-Style Footer Navigation -->
         <div class="doc-footer-nav">
           <div style="flex: 1;"></div>
-          <a href="website/design.html" class="doc-footer-btn" style="text-align: right;">
+          <a href="website/how-it-works.html" class="doc-footer-btn" style="text-align: right;">
             <span class="label">Next Chapter</span>
-            <span class="title">System Design & Components →</span>
+            <span class="title">How It Works & Prompt Flow →</span>
           </a>
         </div>
 

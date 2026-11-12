@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Node Roles & Machine Apps — CPUwiser</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+
+<body>
+  <header class="top-nav">
+    <a href="../index.html" class="brand">
+      <div class="brand-icon">CW</div><span>CPUwiser</span>
+    </a>
+    <nav class="nav-links">
+      <a href="../index.html" class="nav-link">Documentation</a>
+      <a href="how-it-works.html" class="nav-link">How It Works</a>
+      <a href="design.html" class="nav-link">Architecture</a>
+      <a href="cloud-setup.html" class="nav-link">Machine Setup</a>
+      <a href="experiments.html" class="nav-link">Experiments</a>
+      <a href="tasks.html" class="nav-link">Milestones</a>
+    </nav>
+  </header>
+
+  <div class="app-layout">
+    <aside class="sidebar">
+      <div class="sidebar-group">
+        <div class="sidebar-title">Getting Started</div>
+        <ul class="sidebar-menu">
+          <li class="sidebar-item"><a href="../index.html"><span>Overview & Problem</span> <span
+                class="badge badge-green">v1.0</span></a></li>
+          <li class="sidebar-item"><a href="how-it-works.html"><span>How It Works & Flow</span> <span
+                class="badge badge-cyan">Core</span></a></li>
+          <li class="sidebar-item active"><a href="node-roles.html"><span>Master vs Workers</span> <span
+                class="badge badge-yellow">Roles</span></a></li>
+          <li class="sidebar-item"><a href="research.html"><span>Verdict & Research</span> <span
+                class="badge badge-yellow">Stats</span></a></li>
+        </ul>
+      </div>
+      <div class="sidebar-group">
+        <div class="sidebar-title">Machine & Cloud Setup</div>
+        <ul class="sidebar-menu">
+          <li class="sidebar-item"><a href="cloud-setup.html"><span>Machine & Cloud Setup</span> <span
+                class="badge badge-green">Step-by-step</span></a></li>
+          <li class="sidebar-item"><a href="infra.html"><span>Infrastructure & Docker</span></a></li>
+          <li class="sidebar-item"><a href="platforms.html"><span>Pluggable Providers</span> <span
+                class="badge badge-cyan">Oracle/AWS</span></a></li>
+        </ul>
+      </div>
+      <div class="sidebar-group">
+        <div class="sidebar-title">Architecture & System</div>
+        <ul class="sidebar-menu">
+          <li class="sidebar-item"><a href="design.html"><span>System Design</span> <span
+                class="badge badge-cyan">Spec</span></a></li>
+          <li class="sidebar-item"><a href="plan.html"><span>Roadmap & Decisions</span></a></li>
+        </ul>
+      </div>
+      <div class="sidebar-group">
+        <div class="sidebar-title">Testing & Guardrails</div>
+        <ul class="sidebar-menu">
+          <li class="sidebar-item"><a href="experiments.html"><span>Experiment Matrix</span> <span
+                class="badge badge-yellow">Tiers</span></a></li>
+          <li class="sidebar-item"><a href="tasks.html"><span>Task Board</span> <span
+                class="badge badge-green">M0-M7</span></a></li>
+          <li class="sidebar-item"><a href="claude.html"><span>Agent Rules & Guardrails</span> <span
+                class="badge badge-red">Strict</span></a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <main class="main-wrapper">
+      <div class="content-container">
+        <div class="hero-badge">Node Architecture</div>
+        <h1 class="hero-title">What Runs on the Master vs. Workers</h1>
+        <p class="hero-subtitle">
+          Clarification of the single codebase principle: you do not write separate software for master and workers.
+          Machine bootstrap is identical across all nodes.
+        </p>
+
+        <div class="callout callout-success">
+          <div>
+            <strong>Identical Machine Setup:</strong> Every machine (master or worker) runs the <strong>exact same
+              bootstrap script</strong> (Ubuntu 22.04 / 24.04, dependencies, compiler, pinned engine binaries). The only
+            thing that differs is which executable and flags systemd or the runner launches!
+          </div>
+        </div>
+
+        <h2>Comparison Table: Machine Roles & Binaries</h2>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Machine Role</th>
+                <th>Program Started</th>
+                <th>Source Build</th>
+                <th>Listens On</th>
+                <th>Model File Requirement</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Worker</strong><br>(llama.cpp)</td>
+                <td><code>ggml-rpc-server</code></td>
+                <td>Same pinned llama.cpp binary</td>
+                <td>Private overlay IP, port <code>50052</code></td>
+                <td><strong>No model file needed!</strong> Receives assigned weight tensors over RPC at load time.</td>
+              </tr>
+              <tr>
+                <td><strong>Master</strong><br>(llama.cpp)</td>
+                <td><code>llama-server</code> or <code>llama-bench</code></td>
+                <td>Same pinned llama.cpp binary</td>
+                <td>Loopback <code>127.0.0.1:8080</code></td>
+                <td><strong>Needs the full GGUF file</strong>. Reads model weights and streams slices to workers via
+                  <code>--rpc</code>.</td>
+              </tr>
+              <tr>
+                <td><strong>Worker</strong><br>(distributed-llama)</td>
+                <td><code>dllama worker</code></td>
+                <td>Same distributed-llama binary</td>
+                <td>Private overlay IP, port <code>9999</code></td>
+                <td>Holds allocated model layers.</td>
+              </tr>
+              <tr>
+                <td><strong>Master</strong><br>(distributed-llama)</td>
+                <td><code>dllama inference</code> or <code>dllama-api</code></td>
+                <td>Same distributed-llama binary</td>
+                <td>Port <code>8080</code></td>
+                <td>Coordinates ring / pipeline split.</td>
+              </tr>
+              <tr>
+                <td><strong>Runner / CLI</strong><br>(CPUwiser code)</td>
+                <td><code>cpuwiser</code> CLI</td>
+                <td>Python 3.12 <code>uv</code> package</td>
+                <td>None (runs on your dev laptop)</td>
+                <td>Orchestrates SSH and Docker; never installed on workers.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>Can the Master Also Act as a Worker?</h2>
+        <p>
+          <strong>Yes!</strong> In fact, in a small 2-node cluster (such as two 1 OCPU Oracle Arm VMs), the master node
+          computes the early transformer layers (e.g. layers 0–13), and the remote worker computes the remaining layers
+          (e.g. layers 14–27).
+        </p>
+        <p>
+          If the cluster has plenty of worker RAM, the master can also be configured with
+          <code>coordinator_computes=false</code>, dedicating 100% of its CPU to tokenizer, KV-cache orchestration,
+          sampling, and HTTP streaming.
+        </p>
+
+        <div class="doc-footer-nav">
+          <a href="how-it-works.html" class="doc-footer-btn">
+            <span class="label">Previous</span>
+            <span class="title">← How It Works</span>
+          </a>
+          <a href="cloud-setup.html" class="doc-footer-btn" style="text-align: right;">
+            <span class="label">Next</span>
+            <span class="title">Machine & Cloud Setup →</span>
+          </a>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script src="assets/js/main.js"></script>
+</body>
+
+</html>
