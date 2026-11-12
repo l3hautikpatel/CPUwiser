@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pluggable Providers & Vercel — CPUwiser</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+
+<body>
+  <header class="top-nav">
+    <a href="../index.html" class="brand">
+      <div class="brand-icon">CW</div><span>CPUwiser</span>
+    </a>
+    <nav class="nav-links">
+      <a href="../index.html" class="nav-link">Documentation</a>
+      <a href="how-it-works.html" class="nav-link">How It Works</a>
+      <a href="design.html" class="nav-link">Architecture</a>
+      <a href="cloud-setup.html" class="nav-link">Machine Setup</a>
+      <a href="experiments.html" class="nav-link">Experiments</a>
+      <a href="tasks.html" class="nav-link">Milestones</a>
+    </nav>
+  </header>
+
+  <div class="app-layout">
+    <aside class="sidebar">
+      <div class="sidebar-group">
+        <div class="sidebar-title">Getting Started</div>
+        <ul class="sidebar-menu">
+          <li class="sidebar-item"><a href="../index.html"><span>Overview & Problem</span> <span
+                class="badge badge-green">v1.0</span></a></li>
+          <li class="sidebar-item"><a href="how-it-works.html"><span>How It Works & Flow</span> <span
+                class="badge badge-cyan">Core</span></a></li>
+          <li class="sidebar-item"><a href="node-roles.html"><span>Master vs Workers</span> <span
+                class="badge badge-yellow">Roles</span></a></li>
+          <li class="sidebar-item"><a href="research.html"><span>Verdict & Research</span> <span
+                class="badge badge-yellow">Stats</span></a></li>
+        </ul>
+      </div>
+      <div class="sidebar-group">
+        <div class="sidebar-title">Machine & Cloud Setup</div>
+        <ul class="sidebar-menu">
+          <li class="sidebar-item"><a href="cloud-setup.html"><span>Machine & Cloud Setup</span> <span
+                class="badge badge-green">Step-by-step</span></a></li>
+          <li class="sidebar-item"><a href="infra.html"><span>Infrastructure & Docker</span></a></li>
+          <li class="sidebar-item active"><a href="platforms.html"><span>Pluggable Providers</span> <span
+                class="badge badge-cyan">Oracle/AWS</span></a></li>
+        </ul>
+      </div>
+      <div class="sidebar-group">
+        <div class="sidebar-title">Architecture & System</div>
+        <ul class="sidebar-menu">
+          <li class="sidebar-item"><a href="design.html"><span>System Design</span> <span
+                class="badge badge-cyan">Spec</span></a></li>
+          <li class="sidebar-item"><a href="plan.html"><span>Roadmap & Decisions</span></a></li>
+        </ul>
+      </div>
+      <div class="sidebar-group">
+        <div class="sidebar-title">Testing & Guardrails</div>
+        <ul class="sidebar-menu">
+          <li class="sidebar-item"><a href="experiments.html"><span>Experiment Matrix</span> <span
+                class="badge badge-yellow">Tiers</span></a></li>
+          <li class="sidebar-item"><a href="tasks.html"><span>Task Board</span> <span
+                class="badge badge-green">M0-M7</span></a></li>
+          <li class="sidebar-item"><a href="claude.html"><span>Agent Rules & Guardrails</span> <span
+                class="badge badge-red">Strict</span></a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <main class="main-wrapper">
+      <div class="content-container">
+        <div class="hero-badge">Multi-Cloud Design</div>
+        <h1 class="hero-title">Pluggable Providers & Frontend Integration</h1>
+        <p class="hero-subtitle">
+          How CPUwiser abstracts cloud infrastructure behind generic node providers, overlays multi-cloud networking via
+          WireGuard, and integrates frontend web clients.
+        </p>
+
+        <h2>The Provider Abstraction Rule</h2>
+        <div class="callout callout-info">
+          <div>
+            <strong>Decoupled Vendor Interfaces:</strong> The core experiment runner never talks directly to cloud
+            vendor APIs. Instead, it interacts strictly with an abstract <code>NodeAccess</code> interface (SSH or
+            Docker exec). This allows seamless swapping of nodes between Local Docker, Oracle, AWS, or local bare metal!
+          </div>
+        </div>
+
+        <h2>Where Does Vercel Fit?</h2>
+        <p>
+          Vercel is an exceptional serverless platform for hosting frontend user interfaces, but its serverless
+          functions have a 10–60 second maximum execution timeout and zero persistent RAM for holding gigabytes of model
+          weights.
+        </p>
+
+        <div class="card-grid">
+          <div class="glass-card">
+            <span class="badge badge-green">Vercel: What Works</span>
+            <h3 style="margin-top: 0.5rem;">Frontend Web Dashboard</h3>
+            <p style="font-size: 0.88rem; color: var(--text-secondary);">
+              Host Next.js or static documentation/chat pages on Vercel. The web client queries the Master node directly
+              or via a lightweight streaming proxy.
+            </p>
+          </div>
+          <div class="glass-card">
+            <span class="badge badge-red">Vercel: What Does Not Work</span>
+            <h3 style="margin-top: 0.5rem;">Running Engine Workers</h3>
+            <p style="font-size: 0.88rem; color: var(--text-secondary);">
+              Serverless lambdas terminate after brief requests and cannot keep neural network weights in RAM or bind
+              persistent TCP/RPC listening sockets.
+            </p>
+          </div>
+        </div>
+
+        <h2>Multi-Cloud Overlay Network (WireGuard)</h2>
+        <p>
+          When combining a laptop with an Oracle VM or an AWS guest instance, nodes reside in separate private subnets.
+          CPUwiser links them using a lightweight WireGuard VPN mesh, giving every node an internal
+          <code>10.42.0.x</code> IP address with end-to-end encryption.
+        </p>
+
+        <div class="doc-footer-nav">
+          <a href="cloud-setup.html" class="doc-footer-btn">
+            <span class="label">Previous</span>
+            <span class="title">← Machine & Cloud Setup</span>
+          </a>
+          <a href="design.html" class="doc-footer-btn" style="text-align: right;">
+            <span class="label">Next</span>
+            <span class="title">System Design Spec →</span>
+          </a>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script src="assets/js/main.js"></script>
+</body>
+
+</html>

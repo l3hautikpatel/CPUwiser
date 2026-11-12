@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>How Distributed LLMs Work & Request Flow — CPUwiser</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+
+<body>
+  <header class="top-nav">
+    <a href="../index.html" class="brand">
+      <div class="brand-icon">CW</div><span>CPUwiser</span>
+    </a>
+    <nav class="nav-links">
+      <a href="../index.html" class="nav-link">Documentation</a>
+      <a href="how-it-works.html" class="nav-link active">How It Works</a>
+      <a href="design.html" class="nav-link">Architecture</a>
+      <a href="cloud-setup.html" class="nav-link">Machine Setup</a>
+      <a href="experiments.html" class="nav-link">Experiments</a>
+      <a href="tasks.html" class="nav-link">Milestones</a>
+    </nav>
+  </header>
+
+  <div class="app-layout">
+    <aside class="sidebar">
+      <div class="sidebar-group">
+        <div class="sidebar-title">Getting Started</div>
+        <ul class="sidebar-menu">
+          <li class="sidebar-item"><a href="../index.html"><span>Overview & Problem</span> <span
+                class="badge badge-green">v1.0</span></a></li>
+          <li class="sidebar-item active"><a href="how-it-works.html"><span>How It Works & Flow</span> <span
+                class="badge badge-cyan">Core</span></a></li>
+          <li class="sidebar-item"><a href="node-roles.html"><span>Master vs Workers</span> <span
+                class="badge badge-yellow">Roles</span></a></li>
+          <li class="sidebar-item"><a href="research.html"><span>Verdict & Research</span> <span
+                class="badge badge-yellow">Stats</span></a></li>
+        </ul>
+      </div>
+      <div class="sidebar-group">
+        <div class="sidebar-title">Machine & Cloud Setup</div>
+        <ul class="sidebar-menu">
+          <li class="sidebar-item"><a href="cloud-setup.html"><span>Machine & Cloud Setup</span> <span
+                class="badge badge-green">Step-by-step</span></a></li>
+          <li class="sidebar-item"><a href="infra.html"><span>Infrastructure & Docker</span></a></li>
+          <li class="sidebar-item"><a href="platforms.html"><span>Pluggable Providers</span> <span
+                class="badge badge-cyan">Oracle/AWS</span></a></li>
+        </ul>
+      </div>
+      <div class="sidebar-group">
+        <div class="sidebar-title">Architecture & System</div>
+        <ul class="sidebar-menu">
+          <li class="sidebar-item"><a href="design.html"><span>System Design</span> <span
+                class="badge badge-cyan">Spec</span></a></li>
+          <li class="sidebar-item"><a href="plan.html"><span>Roadmap & Decisions</span></a></li>
+        </ul>
+      </div>
+      <div class="sidebar-group">
+        <div class="sidebar-title">Testing & Guardrails</div>
+        <ul class="sidebar-menu">
+          <li class="sidebar-item"><a href="experiments.html"><span>Experiment Matrix</span> <span
+                class="badge badge-yellow">Tiers</span></a></li>
+          <li class="sidebar-item"><a href="tasks.html"><span>Task Board</span> <span
+                class="badge badge-green">M0-M7</span></a></li>
+          <li class="sidebar-item"><a href="claude.html"><span>Agent Rules & Guardrails</span> <span
+                class="badge badge-red">Strict</span></a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <main class="main-wrapper">
+      <div class="content-container">
+        <div class="hero-badge">Runtime Mechanics</div>
+        <h1 class="hero-title">How the Nodes Talk & How You Use the LLM</h1>
+        <p class="hero-subtitle">
+          Detailed journey of a single prompt from your client through the master coordinator down to the worker nodes,
+          network boundaries, and daily operations.
+        </p>
+
+        <!-- Executive Summary Callout -->
+        <div class="callout callout-info">
+          <div>
+            <strong>The Golden Rule:</strong> You only ever talk to the <strong>Master (Coordinator)</strong> node over
+            an OpenAI-compatible HTTP interface (<code>/v1/chat/completions</code>). Workers are never contacted
+            directly by your client or web application.
+          </div>
+        </div>
+
+        <!-- Interactive Flow Diagram -->
+        <h2>The Prompt Execution Pipeline</h2>
+        <div class="diagram-container">
+          <div class="diagram-header">
+            <span class="diagram-title">Single Prompt Journey Through Distributed CPU Nodes</span>
+            <span class="badge badge-cyan">Interactive Architecture</span>
+          </div>
+
+          <svg viewBox="0 0 880 320" width="100%" height="320">
+            <!-- Client App -->
+            <g class="diagram-node">
+              <rect x="20" y="110" width="160" height="90" rx="10" fill="#0369a1" stroke="#38bdf8" stroke-width="1.5" />
+              <text x="100" y="145" fill="#ffffff" font-size="13" font-weight="700" text-anchor="middle">You / Client
+                App</text>
+              <text x="100" y="165" fill="#bae6fd" font-size="10" text-anchor="middle">Web UI / cURL / Demo</text>
+              <text x="100" y="182" fill="#94a3b8" font-size="9" text-anchor="middle">OpenAI API format</text>
+            </g>
+
+            <!-- HTTP Arrow -->
+            <path d="M 180 155 L 260 155" stroke="#38bdf8" stroke-width="2" stroke-dasharray="4 2" />
+            <polygon points="260,155 250,150 250,160" fill="#38bdf8" />
+            <text x="220" y="145" fill="#7dd3fc" font-size="9" text-anchor="middle">HTTP:8080</text>
+
+            <!-- Master Node -->
+            <g class="diagram-node">
+              <rect x="265" y="45" width="230" height="220" rx="12" fill="#1e1b4b" stroke="#818cf8"
+                stroke-width="1.5" />
+              <text x="380" y="75" fill="#ffffff" font-size="14" font-weight="700" text-anchor="middle">MASTER
+                (Coordinator)</text>
+              <text x="380" y="95" fill="#c7d2fe" font-size="10" text-anchor="middle">llama-server
+                (127.0.0.1:8080)</text>
+
+              <rect x="285" y="110" width="190" height="40" rx="6" fill="#312e81" stroke="#a5b4fc" stroke-width="1" />
+              <text x="380" y="128" fill="#e0e7ff" font-size="10" text-anchor="middle">1. Tokenize Prompt</text>
+              <text x="380" y="142" fill="#c7d2fe" font-size="9" text-anchor="middle">Embedding layer lookup</text>
+
+              <rect x="285" y="160" width="190" height="40" rx="6" fill="#312e81" stroke="#a5b4fc" stroke-width="1" />
+              <text x="380" y="178" fill="#e0e7ff" font-size="10" text-anchor="middle">Master Local Layers</text>
+              <text x="380" y="192" fill="#c7d2fe" font-size="9" text-anchor="middle">e.g. Layers 0 to 8</text>
+
+              <rect x="285" y="210" width="190" height="40" rx="6" fill="#14532d" stroke="#4ade80" stroke-width="1" />
+              <text x="380" y="228" fill="#f0fdf4" font-size="10" text-anchor="middle">4. Logits Sampling</text>
+              <text x="380" y="242" fill="#bbf7d0" font-size="9" text-anchor="middle">Greedy / Top-P & Stream
+                token</text>
+            </g>
+
+            <!-- RPC Branch 1 -->
+            <path d="M 495 140 L 590 95" stroke="#4ade80" stroke-width="2" stroke-dasharray="3 3" />
+            <polygon points="590,95 580,94 584,103" fill="#4ade80" />
+            <text x="545" y="105" fill="#86efac" font-size="9" text-anchor="middle">RPC:50052</text>
+
+            <!-- Worker 1 -->
+            <g class="diagram-node">
+              <rect x="595" y="45" width="250" height="100" rx="10" fill="#064e3b" stroke="#34d399"
+                stroke-width="1.5" />
+              <text x="720" y="75" fill="#ffffff" font-size="13" font-weight="700" text-anchor="middle">WORKER 1
+                (ggml-rpc-server)</text>
+              <text x="720" y="95" fill="#a7f3d0" font-size="10" text-anchor="middle">Private IP: 10.0.0.3 (or
+                Docker)</text>
+              <text x="720" y="115" fill="#6ee7b7" font-size="10" text-anchor="middle">Calculates Layers 9 to 18</text>
+              <text x="720" y="132" fill="#cbd5e1" font-size="9" text-anchor="middle">No local model file needed!</text>
+            </g>
+
+            <!-- RPC Branch 2 -->
+            <path d="M 495 180 L 590 220" stroke="#fbbf24" stroke-width="2" stroke-dasharray="3 3" />
+            <polygon points="590,220 584,211 580,221" fill="#fbbf24" />
+            <text x="545" y="215" fill="#fde68a" font-size="9" text-anchor="middle">RPC:50052</text>
+
+            <!-- Worker 2 -->
+            <g class="diagram-node">
+              <rect x="595" y="170" width="250" height="100" rx="10" fill="#78350f" stroke="#fbbf24"
+                stroke-width="1.5" />
+              <text x="720" y="200" fill="#ffffff" font-size="13" font-weight="700" text-anchor="middle">WORKER 2
+                (ggml-rpc-server)</text>
+              <text x="720" y="220" fill="#fef08a" font-size="10" text-anchor="middle">Private IP: 10.0.0.4 (or
+                Docker)</text>
+              <text x="720" y="240" fill="#fde047" font-size="10" text-anchor="middle">Calculates Layers 19 to 27</text>
+              <text x="720" y="257" fill="#cbd5e1" font-size="9" text-anchor="middle">Holds weights + KV cache in
+                RAM</text>
+            </g>
+          </svg>
+        </div>
+
+        <h2>Step-by-Step Prompt Journey</h2>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Step</th>
+                <th>Who Executes</th>
+                <th>Operation</th>
+                <th>Network Traffic</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>1. Request In</strong></td>
+                <td>Client $\rightarrow$ Master</td>
+                <td>POST <code>/v1/chat/completions</code> with user prompt text.</td>
+                <td>Tiny JSON payload over HTTP.</td>
+              </tr>
+              <tr>
+                <td><strong>2. Tokenize</strong></td>
+                <td>Master only</td>
+                <td>Transforms text to token IDs; computes embeddings for first chunk of layers.</td>
+                <td>Local CPU only (0 network).</td>
+              </tr>
+              <tr>
+                <td><strong>3. Prefill / Layers</strong></td>
+                <td>Master & Workers</td>
+                <td>Tensors/activations pass along the layer split (Master $\rightarrow$ Worker 1 $\rightarrow$ Worker
+                  2).</td>
+                <td>RPC over private network/overlay (high bandwidth).</td>
+              </tr>
+              <tr>
+                <td><strong>4. Sample Token</strong></td>
+                <td>Master only</td>
+                <td>Master gathers final logits tensor and runs sampling (temperature, top-p, greedy).</td>
+                <td>Worker sends single activation vector back to Master.</td>
+              </tr>
+              <tr>
+                <td><strong>5. Stream Back</strong></td>
+                <td>Master $\rightarrow$ Client</td>
+                <td>Token text decoded and sent back via SSE (Server-Sent Events) chunk to user.</td>
+                <td>Immediate user-facing response chunk.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>How You Use the LLM Day-to-Day</h2>
+        <div class="card-grid">
+          <div class="glass-card">
+            <span class="badge badge-green">Option 1: Web Chat UI</span>
+            <h3 style="margin-top: 0.5rem;">Browser Chat</h3>
+            <p style="font-size: 0.88rem; color: var(--text-secondary);">
+              Open the web chat demo in your browser. Shows real-time token generation, streaming speed (tok/s), and
+              active cluster topology.
+            </p>
+          </div>
+          <div class="glass-card">
+            <span class="badge badge-yellow">Option 2: Terminal cURL</span>
+            <h3 style="margin-top: 0.5rem;">Standard OpenAI cURL</h3>
+            <pre><code>curl http://127.0.0.1:8080/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{"messages": [{"role": "user", "content": "Hello!"}], "stream": true}'</code></pre>
+          </div>
+          <div class="glass-card">
+            <span class="badge badge-cyan">Option 3: External Projects</span>
+            <h3 style="margin-top: 0.5rem;">SDK / LangChain / LiteLLM</h3>
+            <p style="font-size: 0.88rem; color: var(--text-secondary);">
+              Point any application using <code>openai.OpenAI(base_url="http://master:8080/v1", api_key="dummy")</code>
+              straight to the master node.
+            </p>
+          </div>
+        </div>
+
+        <div class="doc-footer-nav">
+          <a href="../index.html" class="doc-footer-btn">
+            <span class="label">Previous</span>
+            <span class="title">← Overview & Problem</span>
+          </a>
+          <a href="node-roles.html" class="doc-footer-btn" style="text-align: right;">
+            <span class="label">Next</span>
+            <span class="title">Master vs Worker Roles →</span>
+          </a>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script src="assets/js/main.js"></script>
+</body>
+
+</html>
